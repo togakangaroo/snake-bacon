@@ -19,23 +19,25 @@ drawSnake = (positions) ->
 	$('.cell', board).removeClass 'has-snake'
 	_.each positions, (pos) -> $(".row-#{pos[0]} .col-#{pos[1]}", board).addClass 'has-snake'
 
-pauses = $('.pause-play').asEventStream 'click'
+timer = Bacon.interval 1000
+
+pauses = $('.pause-play').asEventStream('click').scan 1, (e, x) -> -x
 pauses.onValue __log "pause/play"
 
 rotateLeft = (pos) -> [-pos[1], pos[0]]  #(-1, 0) (0, -1) (1, 0) (0, 1 )
 rotateRight = (pos) -> [pos[1], -pos[0]]
 
-actions =       $('.left').asEventStream('click').map(-> rotateLeft)
-		.merge( $('.right').asEventStream('click').map(-> rotateRight) )
+keys = $(document).asEventStream('keydown').map('.keyCode')
+lefts  = keys.filter (x) -> x == 37
+rights = keys.filter (x) -> x == 39
+
+actions = lefts.map(-> rotateLeft).merge( rights.map(-> rotateRight) )
 direction = actions.scan([0, 1], (x, f) -> f(x));
 direction.onValue __log "direction"
 
-ticks = $('.tick').asEventStream 'click'
-
-currentDirection = direction.sampledBy ticks
+currentDirection = direction.sampledBy timer
 
 addPosition = (a, b) -> [ (a[0]+b[0]+boardHeight) % boardHeight, (a[1]+b[1]+boardWidth) % boardWidth ]
 position = currentDirection.scan [0, 0], addPosition
-position.onValue __log "position"
 
-position.map(Array).onValue drawSnake
+position.slidingWindow(3).onValue drawSnake
