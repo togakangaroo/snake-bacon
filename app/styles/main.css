@@ -87,3 +87,31 @@ body {
         border-bottom: 0;
     }
 }
+
+.gameboard {
+  padding: 20px;
+}
+.gameboard ul, .gameboard li {
+  margin: 0;
+  padding: 0;
+}
+.gameboard .rows>li {
+  display: table-row;
+}
+.gameboard .cell {
+  border: 1px solid black;
+  display: table-cell;
+  height: 2em;
+  width: 2em;
+}
+.has-snake {
+  background-color: green;
+}
+.has-apple {
+  background-color: red;
+}
+
+.pause-play.playing .play {display: inline; }
+.pause-play.playing .pause {display: none; }
+.pause-play .play {display: none; }
+.pause-play .pause {display: inline; }

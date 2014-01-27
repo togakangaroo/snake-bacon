@@ -36,10 +36,10 @@ Bacon.Observable.prototype.slidingWindowBy = (lengthStream) ->
 			sink (new Bacon.Next buf)
  ####################
 
-timer = Bacon.interval 500
+pauses = $('.pause-play').asEventStream('click').scan true, (x) -> !x
+pauses.onValue $.fn.toggleClass.bind $('.pause-play'), 'playing'
 
-pauses = $('.pause-play').asEventStream('click').scan 1, (e, x) -> -x
-pauses.onValue __log "pause/play"
+timer = Bacon.interval(500).filter pauses
 
 rotateLeft = (pos) -> [-pos[1], pos[0]]  #(-1, 0) (0, -1) (1, 0) (0, 1 )
 rotateRight = (pos) -> [pos[1], -pos[0]]
@@ -69,4 +69,3 @@ snakePositions = position.slidingWindowBy(snakeLength)
 snakePositions.onValue drawSnake
 
 #TODO - GM - need to detect deaths
-#TDO - GM - need to pause/play
