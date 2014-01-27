@@ -24,7 +24,19 @@ drawApple = (pos) ->
 	$('.has-apple', $board).removeClass 'has-apple'
 	$selectPos(pos).addClass 'has-apple'
 
-timer = Bacon.interval 1000
+####################
+Bacon.Observable.prototype.slidingWindowBy = (lengthStream) ->
+	new Bacon.EventStream (sink) =>
+		buf = []
+		length = 0
+		lengthStream.onValue (n) -> length = n
+		@onValue (x) ->
+			buf.unshift x
+			buf = buf.slice 0, length
+			sink (new Bacon.Next buf)
+ ####################
+
+timer = Bacon.interval 500
 
 pauses = $('.pause-play').asEventStream('click').scan 1, (e, x) -> -x
 pauses.onValue __log "pause/play"
@@ -45,10 +57,16 @@ normalizeDimension = (val, dim) -> (val+dim) % dim
 addPosition = (a, b) -> [ (normalizeDimension a[0]+b[0], boardHeight), (normalizeDimension a[1]+b[1], boardWidth) ]
 position = currentDirection.scan [0, 0], addPosition
 
-position.slidingWindow(3).onValue drawSnake
-
 apple = ->
 	applePos = [ (normalizeDimension (_.random boardHeight), boardHeight), (normalizeDimension (_.random boardWidth), boardWidth) ]
 	snakeEatsApple = position.filter (p) -> p[0] == applePos[0] && p[1] == applePos[1]
 	snakeEatsApple.take(1).flatMapLatest(apple).toProperty(applePos)
-apple().onValue drawApple
+appleStream = apple()
+appleStream.onValue drawApple
+
+snakeLength = appleStream.map(1).scan 1, (a, b) -> a+b
+snakePositions = position.slidingWindowBy(snakeLength)
+snakePositions.onValue drawSnake
+
+#TODO - GM - need to detect deaths
+#TDO - GM - need to pause/play
