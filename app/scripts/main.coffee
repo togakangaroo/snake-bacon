@@ -6,7 +6,7 @@ __log = (title) -> ->
 
 #draw board
 [boardHeight, boardWidth] = [10, 10]
-board = $('.gameboard').html (_.flatten [
+$board = $('.gameboard').html (_.flatten [
 		"<ul class='rows'>"
 		(_.map _.range(boardHeight), (y) -> [
 			"<li class='row-#{y}'><ul class='cols'>"
@@ -15,9 +15,14 @@ board = $('.gameboard').html (_.flatten [
 		])
 		"</ul>"
 	]).join ''
+$selectPos = (pos) -> $(".row-#{pos[0]} .col-#{pos[1]}", $board)
+
 drawSnake = (positions) ->
-	$('.cell', board).removeClass 'has-snake'
-	_.each positions, (pos) -> $(".row-#{pos[0]} .col-#{pos[1]}", board).addClass 'has-snake'
+	$('.cell', $board).removeClass 'has-snake'
+	_.each positions, (pos) -> $selectPos(pos).addClass 'has-snake'
+drawApple = (pos) -> 
+	$('.has-apple', $board).removeClass 'has-apple'
+	$selectPos(pos).addClass 'has-apple'
 
 timer = Bacon.interval 1000
 
@@ -33,11 +38,17 @@ rights = keys.filter (x) -> x == 39
 
 actions = lefts.map(-> rotateLeft).merge( rights.map(-> rotateRight) )
 direction = actions.scan([0, 1], (x, f) -> f(x));
-direction.onValue __log "direction"
 
 currentDirection = direction.sampledBy timer
 
-addPosition = (a, b) -> [ (a[0]+b[0]+boardHeight) % boardHeight, (a[1]+b[1]+boardWidth) % boardWidth ]
+normalizeDimension = (val, dim) -> (val+dim) % dim
+addPosition = (a, b) -> [ (normalizeDimension a[0]+b[0], boardHeight), (normalizeDimension a[1]+b[1], boardWidth) ]
 position = currentDirection.scan [0, 0], addPosition
 
 position.slidingWindow(3).onValue drawSnake
+
+apple = ->
+	applePos = [ (normalizeDimension (_.random boardHeight), boardHeight), (normalizeDimension (_.random boardWidth), boardWidth) ]
+	snakeEatsApple = position.filter (p) -> p[0] == applePos[0] && p[1] == applePos[1]
+	snakeEatsApple.take(1).flatMapLatest(apple).toProperty(applePos)
+apple().onValue drawApple
