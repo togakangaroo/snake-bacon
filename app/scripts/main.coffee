@@ -64,8 +64,10 @@ apple = ->
 appleStream = apple()
 appleStream.onValue drawApple
 
-snakeLength = appleStream.map(1).scan 1, (a, b) -> a+b
+snakeLength = appleStream.map(1).scan 0, (a, b) -> a+b
 snakePositions = position.slidingWindowBy(snakeLength)
 snakePositions.onValue drawSnake
 
-#TODO - GM - need to detect deaths
+snakeDeath = snakePositions
+				.filter (positions) -> _.any positions, (p1) -> _.any _.without(positions, p1), (p2) -> p1[0] == p2[0] && p1[1] == p2[1]
+snakeDeath.onValue $.fn.addClass.bind $board, 'death'

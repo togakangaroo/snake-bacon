@@ -115,3 +115,20 @@ body {
 .pause-play.playing .pause {display: none; }
 .pause-play .play {display: none; }
 .pause-play .pause {display: inline; }
+
+@keyframes blink {to {visibility: hidden; } }
+@-webkit-keyframes blink {to {visibility: hidden; } }
+@-moz-keyframes blink {to {visibility: hidden; } }
+.death {
+    animation: blink 1s steps(5, start) infinite;
+    -moz-animation: blink 1s steps(5, start) infinite;
+    -webkit-animation: blink 1s steps(5, start) infinite;
+}
+.death:before {
+    content: "Game Over";
+    font-size: 3em;
+    position: relative;
+    left: 1em;
+    top: 3.5em;
+    background-color: blueviolet;
+};
